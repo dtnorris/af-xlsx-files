@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+workspace_root="${AF_WORKSPACE_ROOT:-$(cd "$repo_root/.." && pwd)}"
+suite="${AF_PROJECT_STATE_SUITE:-$repo_root/contracts/project-state/v0.2}"
+state_schema="adventurefinder-project-state/v0.2"
+if [[ ! -f "$suite/cases.yml" ]]; then
+  echo "project-state contract check: FAIL (missing selected suite: $suite)" >&2
+  exit 1
+fi
+suite_target="$(awk '$1 == "project_state_schema:" { print $2; exit }' "$suite/cases.yml")"
+if [[ "$suite_target" != "$state_schema" ]]; then
+  echo "project-state contract check: FAIL (suite targets $suite_target; expected $state_schema)" >&2
+  exit 1
+fi
+
+consumers=(
+  af-data-pipeline
+  af-cli-query-matcher
+  af-frontier-pack
+)
+
+failures=0
+for name in "${consumers[@]}"; do
+  repo="$workspace_root/$name"
+  if [[ "$name" == af-data-pipeline && "${AF_DATA_PIPELINE_ROOT+x}" == x ]]; then
+    repo="$AF_DATA_PIPELINE_ROOT"
+    case "$repo" in
+      /*) ;;
+      *) echo "$name: FAIL (AF_DATA_PIPELINE_ROOT must be an absolute code directory)" >&2; exit 1 ;;
+    esac
+    case "$repo/" in
+      */./*|*/../*)
+        echo "$name: FAIL (AF_DATA_PIPELINE_ROOT must not contain traversal)" >&2
+        exit 1
+        ;;
+    esac
+    ancestor="${repo%/}"
+    while [[ -n "$ancestor" ]]; do
+      if [[ -L "$ancestor" ]]; then
+        echo "$name: FAIL (AF_DATA_PIPELINE_ROOT contains a symlink: $ancestor)" >&2
+        exit 1
+      fi
+      ancestor="${ancestor%/*}"
+    done
+  fi
+  checker="$repo/bin/check-project-state-contract"
+
+  if [[ ! -d "$repo" ]]; then
+    echo "$name: FAIL (missing repo: $repo)" >&2
+    failures=$((failures + 1))
+    continue
+  fi
+  if [[ ! -f "$checker" || ! -x "$checker" ]]; then
+    echo "$name: FAIL (missing executable: $checker)" >&2
+    failures=$((failures + 1))
+    continue
+  fi
+  if [[ "$name" == af-data-pipeline &&
+        ( ! -x "$repo/bin/af-data" || ! -f "$repo/lib/af_data_pipeline/project_state.rb" ) ]]; then
+    echo "$name: FAIL (not a pipeline code checkout: $repo)" >&2
+    failures=$((failures + 1))
+    continue
+  fi
+
+  if ! (cd "$repo" && bundle exec bin/check-project-state-contract --suite "$suite"); then
+    failures=$((failures + 1))
+  fi
+done
+
+if (( failures > 0 )); then
+  echo "project-state contract check: FAIL ($failures consumer(s))" >&2
+  exit 1
+fi
+
+echo "project-state contract check: PASS (${#consumers[@]} consumers, $state_schema)"

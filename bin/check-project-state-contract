@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "digest"
+require "fileutils"
+require "optparse"
+require "yaml"
+require_relative "../lib/af_xlsx_files"
+
+options = {}
+OptionParser.new do |parser|
+  parser.banner = "Usage: bin/check-project-state-contract --suite PATH"
+  parser.on("--suite PATH", "Canonical project-state conformance suite") { |v| options[:suite] = v }
+end.parse!
+
+abort "missing --suite PATH" if options[:suite].to_s.strip.empty?
+suite = File.expand_path(options[:suite])
+abort "suite not found: #{suite}" unless Dir.exist?(suite)
+
+oracle = YAML.safe_load_file(File.join(suite, "cases.yml"), aliases: false) || {}
+expected_suite = "adventurefinder-project-state-conformance/v0.1"
+expected_schema = AfXlsxFiles::ProjectState::SCHEMA_VERSION
+abort "unsupported conformance suite #{oracle['suite_schema'].inspect}" unless oracle["suite_schema"] == expected_suite
+abort "suite targets #{oracle['project_state_schema'].inspect}; consumer supports #{expected_schema}" unless oracle["project_state_schema"] == expected_schema
+
+cases = oracle.fetch("cases")
+failures = []
+
+cases.each do |name, expectation|
+  manifest = File.join(suite, "fixtures", name, "PROJECT_STATE.yml")
+  expected_valid = expectation.fetch("valid")
+  error = nil
+
+  begin
+    AfXlsxFiles::ProjectState.new(manifest_path: manifest).validate!
+    actual_valid = true
+  rescue AfXlsxFiles::Error => e
+    actual_valid = false
+    error = e
+  end
+
+  next if actual_valid == expected_valid
+  failures << [name, expected_valid, actual_valid, error&.message]
+end
+
+if failures.empty?
+  puts "af-xlsx-files: PASS #{cases.length}/#{cases.length}"
+  exit 0
+end
+
+puts "af-xlsx-files: FAIL #{cases.length - failures.length}/#{cases.length}"
+failures.each do |name, expected_valid, actual_valid, message|
+  puts "  #{name}: expected #{expected_valid ? 'ACCEPT' : 'REJECT'}, got #{actual_valid ? 'ACCEPT' : 'REJECT'}"
+  puts "    #{message}" if message
+end
+exit 1
