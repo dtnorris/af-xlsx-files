@@ -1,0 +1,21 @@
+suite_schema: adventurefinder-project-state-conformance/v0.1
+project_state_schema: adventurefinder-project-state/v0.2
+cases:
+  valid-distinct-roles:
+    valid: true
+  valid-shared-artifact:
+    valid: true
+  invalid-wrong-schema:
+    valid: false
+  invalid-missing-role:
+    valid: false
+  invalid-unknown-top-level-key:
+    valid: false
+  invalid-bad-filename:
+    valid: false
+  invalid-sha-mismatch:
+    valid: false
+  invalid-baseline-newer-than-head:
+    valid: false
+  invalid-floor-newer-than-head:
+    valid: false

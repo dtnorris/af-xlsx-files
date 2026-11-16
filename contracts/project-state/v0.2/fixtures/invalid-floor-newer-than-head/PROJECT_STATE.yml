@@ -1,0 +1,16 @@
+schema_version: adventurefinder-project-state/v0.2
+catalog_head:
+  version: "2.0"
+  filename: 5e_Adventure_Master_Catalog_2.0.xlsx
+  sha256: 0d27eb5d5dccc98f378ac46303569e0d01269f7f2811a6241d6aa3d54c1c9293
+  bytes: 8
+matcher_authorized_baseline:
+  version: "1.5"
+  filename: 5e_Adventure_Master_Catalog_1.5.xlsx
+  sha256: 39b7cc1fcb44dd774b50e73b081cfb7ab046ef453bafd2fd8f6e6fb87fccb506
+  bytes: 14
+production_dependency_floor:
+  version: "3.0"
+  filename: 5e_Adventure_Master_Catalog_3.0.xlsx
+  sha256: cc9afd40f44428473c254d98ce0eafc236b932db96a5c2591e15ac6af3f59e4f
+  bytes: 13
