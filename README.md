@@ -19,7 +19,12 @@ positive byte size/path. Independent roles cannot exceed `catalog_head`.
 Consumers choose explicit artifacts and frozen inputs before their documented
 role default; there is no filename/timestamp discovery. The preserved
 [v0.2 oracle](contracts/project-state/v0.2/README.md) defines read conformance.
-XL has no promotion or atomic role-write API.
+Guarded writes are internal to the pipeline's reviewed adoption workflow. The
+owner locks the physical catalog directory, checks reviewed repository, manifest
+and workbook identities, imports exclusively and atomically replaces the
+manifest with a transition affecting only `catalog_head`. The pipeline supplies
+and revalidates admission under that same lock. Standalone consumers use the
+read and construction APIs above.
 
 `AfXlsxFiles::EmptyCatalog.create!(path:, version:, ordinary_capacity:,
 large_capacity:, source_capacity:, publisher_capacity:)` returns the absolute
@@ -97,7 +102,6 @@ Use exact loaded-feature paths and hashes to establish the selected code.
 Installed identity, application, host gates and acceptance belong to the operator.
 Keep both candidates for recovery; switching code does not reverse adopted data.
 
-Catalog promotion/storage extraction, exact manual prior-manifest binding,
-complete large-only manual review, full FP large-sheet export, all-caller
-adoption, real Git initialization, data-store rename and publication are deferred.
+Complete large-only manual review, full FP large-sheet export, all-caller
+adoption, real Git initialization, data-store rename and publication remain deferred.
 The first real FP witness covers only its documented ordinary-sheet reader.

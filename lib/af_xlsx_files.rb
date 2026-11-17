@@ -13,8 +13,8 @@ require "time"
 require "yaml"
 require "zip"
 
-# Public representation and finite construction owner; no workflow admission or
-# catalog promotion API. Runtime/parse/filesystem errors retain their classes.
+# Public representation and finite construction owner. Workflow admission stays
+# with the pipeline. Runtime/parse/filesystem errors retain their classes.
 module AfXlsxFiles
   API_VERSION = "0.1"
 end
@@ -26,3 +26,4 @@ require_relative "af_xlsx_files/input_binding"
 require_relative "af_xlsx_files/boundary_freeze_apply"
 require_relative "af_xlsx_files/amc_compatibility_check"
 require_relative "af_xlsx_files/empty_catalog"
+require_relative "af_xlsx_files/catalog_storage"
