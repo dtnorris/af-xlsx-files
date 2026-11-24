@@ -58,6 +58,21 @@ class CatalogTest < Minitest::Test
     end
   end
 
+  def test_empty_catalog_supports_release_fill_transitions
+    Dir.mktmpdir("xl-release-fills-", File.realpath(Dir.tmpdir)) do |root|
+      path = empty(root)
+      styles = AfXlsxFiles::AmcApply::Workbook.new(path).styles
+      numeric_style = 1
+      review_style = styles.red_style_for(numeric_style)
+      accepted_style = styles.style_for_fill(review_style, "#D0E0E3")
+
+      assert_equal "#F4CCCC", styles.fill_rgb(review_style.to_s)
+      assert_equal "#D0E0E3", styles.fill_rgb(accepted_style.to_s)
+      assert_equal styles.base_signature(numeric_style), styles.base_signature(review_style)
+      assert_equal styles.base_signature(numeric_style), styles.base_signature(accepted_style)
+    end
+  end
+
   # Invalid capacity/identity, existing destinations and symlink ancestors refuse.
   def test_empty_refusals_publish_nothing
     Dir.mktmpdir("xl-empty-refusal-", File.realpath(Dir.tmpdir)) do |root|
