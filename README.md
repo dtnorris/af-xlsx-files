@@ -12,6 +12,25 @@ The original stub's MIT license is preserved.
 
 ## Public inputs and results
 
+To create your first catalog, run this from the repository root with the Ruby
+dependencies above. It prints the path to a new, empty workbook in a temporary
+directory. The example allocates four ordinary and four large adventure slots,
+two source slots and two publisher slots.
+
+```sh
+ruby -Ilib -raf_xlsx_files -rtmpdir <<'RUBY'
+directory = File.realpath(Dir.mktmpdir("af-catalog-"))
+puts AfXlsxFiles::EmptyCatalog.create!(
+  path: File.join(directory, "5e_Adventure_Master_Catalog_0.1.xlsx"),
+  version: "0.1", ordinary_capacity: 4, large_capacity: 4,
+  source_capacity: 2, publisher_capacity: 2
+)
+RUBY
+```
+
+If you already have a project-state manifest, validate it and resolve
+`catalog_head` to find the workbook your workflow has accepted.
+
 `AfXlsxFiles::ProjectState.new(manifest_path:).validate!` checks the complete
 closed PROJECT_STATE v0.2 manifest and all three artifacts. `resolve(role)`
 requires an explicitly named role and returns its name/version/filename/hash/
